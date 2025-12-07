@@ -24,6 +24,7 @@ type Config struct {
 	CommitType       string
 	CustomConvention string
 	MaxRedirects     int
+	Temperature      float64
 	UseGitmoji       bool
 
 	Proxy string
@@ -35,5 +36,6 @@ type MessageOptions struct {
 	CommitType       string
 	CustomConvention string
 	MaxLength        int
+	Temperature      float64
 	MaxRedirects     int
 }

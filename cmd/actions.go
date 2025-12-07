@@ -38,6 +38,7 @@ func (a *App) ConfigureAI(c *cli.Context) (*ai.Config, error) {
 		APIKey:           c.String("api-key"),
 		Timeout:          time.Duration(c.Int("timeout")) * time.Second,
 		MaxLength:        c.Int("max-length"),
+		Temperature:      c.Float64("temperature"),
 		Language:         c.String("lang"),
 		MaxRedirects:     c.Int("max-redirects"),
 		Proxy:            c.String("proxy"),
@@ -75,6 +76,7 @@ func (a *App) generateCommitMessage(ctx context.Context, diff string, cfg *ai.Co
 		CommitType:       cfg.CommitType,
 		CustomConvention: cfg.CustomConvention,
 		MaxLength:        cfg.MaxLength,
+		Temperature:      cfg.Temperature,
 		MaxRedirects:     cfg.MaxRedirects,
 	}
 
@@ -215,6 +217,9 @@ func (a *App) applyConfigDefaults(cfg *ai.Config) {
 	}
 	if cfg.MaxRedirects == 0 {
 		cfg.MaxRedirects = a.config.MaxRedirects
+	}
+	if cfg.Temperature == 0 {
+		cfg.Temperature = a.config.Temperature
 	}
 	if cfg.URL == "" {
 		switch cfg.Provider {

@@ -67,7 +67,7 @@ type Request struct {
 	Model       string    `json:"model"`
 	Messages    []Message `json:"messages"`
 	MaxTokens   int       `json:"max_tokens,omitempty"`
-	Temperature float32   `json:"temperature,omitempty"`
+	Temperature float64   `json:"temperature,omitempty"`
 }
 
 type Response struct {
@@ -97,7 +97,7 @@ func (p *GenericProvider) GenerateCommitMessage(ctx context.Context, diff string
 			{"user", prompt},
 		},
 		MaxTokens:   max(512, opts.MaxLength), // More tokens for complete messages
-		Temperature: 0.7,                      // Slightly creative but controlled
+		Temperature: opts.Temperature,         // Slightly creative but controlled
 	}
 
 	jsonData, err := sonic.Marshal(reqBody)

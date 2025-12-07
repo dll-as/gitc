@@ -10,18 +10,19 @@ import (
 
 // Config holds the main configuration structure for the gitc CLI tool
 type Config struct {
-	Provider         string `json:"provider"`
-	APIKey           string `json:"api_key"`
-	Model            string `json:"model"`
-	URL              string `json:"url"`
-	MaxLength        int    `json:"max_length"`
-	Proxy            string `json:"proxy"`
-	Language         string `json:"language"`
-	Timeout          int    `json:"timeout"`
-	CommitType       string `json:"commit_type"`
-	CustomConvention string `json:"custom_convention"`
-	UseGitmoji       bool   `json:"use_gitmoji"`
-	MaxRedirects     int    `json:"max_redirects"`
+	Provider         string  `json:"provider"`
+	APIKey           string  `json:"api_key"`
+	Model            string  `json:"model"`
+	URL              string  `json:"url"`
+	MaxLength        int     `json:"max_length"`
+	Temperature      float64 `json:"temperature"`
+	Proxy            string  `json:"proxy"`
+	Language         string  `json:"language"`
+	Timeout          int     `json:"timeout"`
+	CommitType       string  `json:"commit_type"`
+	CustomConvention string  `json:"custom_convention"`
+	UseGitmoji       bool    `json:"use_gitmoji"`
+	MaxRedirects     int     `json:"max_redirects"`
 }
 
 // DefaultConfig returns a default config with fallback values
@@ -32,6 +33,7 @@ func DefaultConfig() *Config {
 		Model:            "gpt-4o-mini",
 		URL:              "https://api.openai.com/v1/chat/completions",
 		MaxLength:        250,
+		Temperature:      0.7,
 		Proxy:            "",
 		Language:         "en",
 		Timeout:          10,

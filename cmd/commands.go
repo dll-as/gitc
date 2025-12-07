@@ -91,6 +91,11 @@ var Commands = &cli.App{
 			Usage:   "Maximum number of HTTP redirects to follow",
 			EnvVars: []string{"GITC_MAX_REDIRECTS"},
 		},
+		&cli.Float64Flag{
+			Name:  "temperature",
+			Value: 0.7,
+			Usage: "Control creativity (0.0 = deterministic, 1.0 = very creative)",
+		},
 		&cli.BoolFlag{
 			Name:    "dry-run",
 			Aliases: []string{"d"},

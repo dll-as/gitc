@@ -105,6 +105,7 @@ Config File (`~/.gitc/config.json`) :
 {
   "provider": "openai",
   "max_length": 200,
+  "temperature": 0.7,
   "proxy": "",
   "language": "en",
   "timeout": 10,
@@ -138,6 +139,7 @@ The following CLI flags are available for the `ai-commit` command and its `confi
 | `--lang` | - | Language for commit messages (e.g., `en`, `fa`, `ru`) | `en` | `GITC_LANGUAGE` | `--lang fa` |
 | `--timeout` | - | Request timeout in seconds | `10` | - | `--timeout 15` |
 | `--maxLength` | - | Maximum length of the commit message | `200` | - | `--maxLength 150` |
+| `--temperature` | - | Control AI creativity (0.0 = fully deterministic, 1.0 = very creative) | `0.7` | - | `--temperature 0.8`
 | `--api-key` | `-k` | API key for the AI provider | - | `AI_API_KEY` | `--api-key sk-xxx` |
 | `--proxy` | `-p` | Proxy URL for API requests | - | `GITC_PROXY` | `--proxy http://proxy.example.com:8080` |
 | `--commit-type` | `-t` | Commit type for Conventional Commits (e.g., `feat`, `fix`) | - | `GITC_COMMIT_TYPE` | `--commit-type feat` |
