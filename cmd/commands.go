@@ -91,6 +91,12 @@ var Commands = &cli.App{
 			Usage:   "Maximum number of HTTP redirects to follow",
 			EnvVars: []string{"GITC_MAX_REDIRECTS"},
 		},
+		&cli.BoolFlag{
+			Name:    "dry-run",
+			Aliases: []string{"d"},
+			Usage:   "Show the processed diff and prompt without sending to AI",
+			EnvVars: []string{"GITC_DRY_RUN"},
+		},
 		&cli.StringFlag{
 			Name:    "config",
 			Aliases: []string{"c"},

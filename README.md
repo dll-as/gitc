@@ -49,6 +49,9 @@
   - Fast JSON parsing with [sonic](https://github.com/bytedance/sonic) and HTTP requests with [fasthttp](https://github.com/valyala/fasthttp).
   - Robust error handling for reliable operation.
 
+- 🧪 Debug & Dry-Run
+  - Preview prompts and configs without API calls — perfect for tuning without burning tokens.
+
 ## 📦 Installation
 ### Prerequisites:
   - Go: Version **1.18** or higher (required for building from source).
@@ -84,6 +87,9 @@ gitc --emoji --lang fa
 
 # Custom commit type
 gitc --commit-type fix
+
+# Debug mode: See what prompt would be sent without API cost
+gitc --dry-run
 ```
 
 ## Environment Variables
@@ -138,6 +144,7 @@ The following CLI flags are available for the `ai-commit` command and its `confi
 | `--custom-convention` | `-C` | Custom commit message convention (JSON format) | - | `GITC_CUSTOM_CONVENTION` | `--custom-convention '{"prefix": "JIRA-123"}'` |
 | `--emoji` | `-g` | Add Gitmoji to the commit message | `false` | `GITC_GITMOJI` | `--emoji` |
 | `--no-emoji` | - | Disables Gitmoji in commit messages (overrides `--emoji` and config file) | `false` | - | `--no-emoji`
+| `--dry-run` | -d | Preview the exact prompt and config sent to AI without making an API request (great for debugging prompts and avoiding costs) | `false` | `GITC_DRY_RUN` | --dry-run or -d
 | `--max-redirects` | `-r` | Maximum number of HTTP redirects | `5` | `GITC_MAX_REDIRECTS` | `--max-redirects 10` |
 | `--config` | `-c` | Path to the configuration file | `~/.gitc/config.json` | `GITC_CONFIG_PATH` | `--config ./my-config.json` |
 

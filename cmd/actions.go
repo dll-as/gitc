@@ -147,6 +147,12 @@ func (a *App) CommitAction(c *cli.Context) error {
 		return fmt.Errorf("❌ failed to build AI config: %w", err)
 	}
 
+	// preview prompt + config, no API call
+	if c.Bool("dry-run") {
+		utils.PrintDryRun(diff, cfg)
+		return nil
+	}
+
 	// Generate commit message
 	msg, err := a.generateCommitMessage(c.Context, diff, cfg)
 	if err != nil {
