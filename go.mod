@@ -1,4 +1,4 @@
-module github.com/rezatg/gitc
+module github.com/dll-as/gitc
 
 go 1.25.1
 

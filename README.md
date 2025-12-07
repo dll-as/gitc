@@ -1,16 +1,16 @@
 <div align="center">
-  <img src="https://github.com/rezatg/gitc/blob/master/assets/logo.jpg" alt="gitc AI-Powered Commits" style="clip-path: inset(35px 0 35px 0);margin: 0; padding: 0px, border-radius: 5px;box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+  <img src="https://github.com/dll-as/gitc/blob/master/assets/logo.jpg" alt="gitc AI-Powered Commits" style="clip-path: inset(35px 0 35px 0);margin: 0; padding: 0px, border-radius: 5px;box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
 </div>
 
 # ✨ gitc - AI-Powered Git Commit Messages
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/rezatg/gitc)](https://pkg.go.dev/github.com/rezatg/gitc)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/rezatg/gitc?logo=go)](go.mod)
-[![Sourcegraph](https://sourcegraph.com/github.com/rezatg/gitc/-/badge.svg)](https://sourcegraph.com/github.com/rezatg/gitc?badge)
-[![Discussions](https://img.shields.io/github/discussions/rezatg/gitc?color=58a6ff&label=Discussions&logo=github)](https://github.com/rezatg/gitc/discussions)
-[![Downloads](https://img.shields.io/github/downloads/rezatg/gitc/total?color=blue)](https://github.com/rezatg/gitc/releases)
+[![Go Reference](https://pkg.go.dev/badge/github.com/dll-as/gitc)](https://pkg.go.dev/github.com/dll-as/gitc)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/dll-as/gitc?logo=go)](go.mod)
+[![Sourcegraph](https://sourcegraph.com/github.com/dll-as/gitc/-/badge.svg)](https://sourcegraph.com/github.com/dll-as/gitc?badge)
+[![Discussions](https://img.shields.io/github/discussions/dll-as/gitc?color=58a6ff&label=Discussions&logo=github)](https://github.com/dll-as/gitc/discussions)
+[![Downloads](https://img.shields.io/github/downloads/dll-as/gitc/total?color=blue)](https://github.com/dll-as/gitc/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/rezatg/gitc)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/dll-as/gitc)
 
 <div align="center">
   <a href="#-installation">Installation</a> •
@@ -57,11 +57,11 @@
 
 #### Quick Install:
   ```bash
-  go install github.com/rezatg/gitc@latest
+  go install github.com/dll-as/gitc@latest
   ```
 
 ### Manual Install
-  1. Download binary from [releases](https://github.com/rezatg/gitc/releases)
+  1. Download binary from [releases](https://github.com/dll-as/gitc/releases)
   2. `chmod +x gitc`
   3. Move to `/usr/local/bin`
 
@@ -161,11 +161,11 @@ The following CLI flags are available for the `ai-commit` command and its `confi
 | **DeepSeek** | deepseek-rag (experimental) | `api_key`, `model`, `url` | 🧪 Experimental Support |
 | **Gemini (Google)** | Coming Soon | - | 🔜 Planned |
 | **Others** | - | - | 🧪 Under consideration |
-> ℹ️ We're actively working on supporting multiple AI backends to give you more control, flexibility, and performance. Have a provider you'd like to see? [Open a discussion](https://github.com/rezatg/gitc/discussions)!
+> ℹ️ We're actively working on supporting multiple AI backends to give you more control, flexibility, and performance. Have a provider you'd like to see? [Open a discussion](https://github.com/dll-as/gitc/discussions)!
 
 ## 🤝 Contributing
 
 We welcome contributions! Please check out the [contributing guide](CONTRIBUTING.md) before making a PR.
 
 ## ⭐️ Star History
-[![Star History Chart](https://api.star-history.com/svg?repos=rezatg/gitc&type=Date)](https://www.star-history.com/#rezatg/gitc&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=dll-as/gitc&type=Date)](https://www.star-history.com/#dll-as/gitc&Date)

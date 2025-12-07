@@ -63,7 +63,7 @@ We value contributions in many forms, including:
 - ✅ **Writing or improving tests**
 - 💡 **Suggesting ideas** via discussions
 
-If you're unsure where to start, check out our [GitHub Discussions](https://github.com/rezatg/gitc/discussions) or [Issues](https://github.com/rezatg/gitc/issues) for inspiration.
+If you're unsure where to start, check out our [GitHub Discussions](https://github.com/dll-as/gitc/discussions) or [Issues](https://github.com/dll-as/gitc/issues) for inspiration.
 
 ## 🧾 Commit Message Guidelines
 We use [Conventional Commits](https://www.conventionalcommits.org) to maintain a clear and semantic commit history. This ensures our changelog is easy to read and understand.
@@ -101,13 +101,13 @@ To submit your changes:
 6. Submit your PR and respond to any feedback during the code review process.
 
 ## 💡 Feature Suggestions & Bug Reports
-- **Report a bug**: Open an issue on our [Issues page](https://github.com/rezatg/gitc/issues).
-- **Suggest a feature**: Start a discussion on our [Discussions page](https://github.com/rezatg/gitc/discussions).
-- **New to contributing?** Look for issues labeled [`good first issue`](https://github.com/rezatg/gitc/labels/good%20first%20issue) to get started.
+- **Report a bug**: Open an issue on our [Issues page](https://github.com/dll-as/gitc/issues).
+- **Suggest a feature**: Start a discussion on our [Discussions page](https://github.com/dll-as/gitc/discussions).
+- **New to contributing?** Look for issues labeled [`good first issue`](https://github.com/dll-as/gitc/labels/good%20first%20issue) to get started.
 
 ## 🫶 Community
 Join our community to connect with other contributors:
-- Participate in [GitHub Discussions](https://github.com/rezatg/gitc/discussions) to share ideas or ask questions.
+- Participate in [GitHub Discussions](https://github.com/dll-as/gitc/discussions) to share ideas or ask questions.
 - Stay updated by starring the repository and following along!
 
 ## 🙌 Thank You!

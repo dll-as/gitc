@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/rezatg/gitc/internal/git"
-	"github.com/rezatg/gitc/pkg/config"
+	"github.com/dll-as/gitc/internal/git"
+	"github.com/dll-as/gitc/pkg/config"
 	"github.com/urfave/cli/v2"
 )
 

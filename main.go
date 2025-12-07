@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/rezatg/gitc/cmd"
+	"github.com/dll-as/gitc/cmd"
 )
 
 func main() {

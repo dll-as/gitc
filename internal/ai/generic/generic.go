@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/bytedance/sonic"
-	"github.com/rezatg/gitc/internal/ai"
-	"github.com/rezatg/gitc/pkg/utils"
+	"github.com/dll-as/gitc/internal/ai"
+	"github.com/dll-as/gitc/pkg/utils"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpproxy"
 )

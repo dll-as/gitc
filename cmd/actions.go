@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rezatg/gitc/internal/ai"
-	"github.com/rezatg/gitc/internal/ai/generic"
-	"github.com/rezatg/gitc/internal/git"
-	"github.com/rezatg/gitc/pkg/config"
-	"github.com/rezatg/gitc/pkg/utils"
+	"github.com/dll-as/gitc/internal/ai"
+	"github.com/dll-as/gitc/internal/ai/generic"
+	"github.com/dll-as/gitc/internal/git"
+	"github.com/dll-as/gitc/pkg/config"
+	"github.com/dll-as/gitc/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
 
