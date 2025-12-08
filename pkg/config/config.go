@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/dll-as/gitc/internal/ai"
 )
 
 // Config holds the main configuration structure for the gitc CLI tool
@@ -140,32 +138,30 @@ func Save(cfg *Config) error {
 	data, err := sonic.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
-	} else if err := os.WriteFile(absPath, data, 0600); err != nil {
+	} else if err = os.WriteFile(absPath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 
 	return nil
 }
 
-func (c Config) ToAIConfig() ai.Config {
-	return ai.Config{
-		Provider:   c.Provider,
-		APIKey:     c.APIKey,
-		URL:        c.URL,
-		Timeout:    time.Duration(c.Timeout) * time.Second,
-		Proxy:      c.Proxy,
-		UseGitmoji: c.UseGitmoji,
-		Message: ai.MessageOptions{
-			Model:            c.Model,
-			Language:         c.Language,
-			CommitType:       c.CommitType,
-			Scope:            "",
-			CustomConvention: c.CustomConvention,
-			MaxLength:        c.MaxLength,
-			Temperature:      c.Temperature,
-			MaxRedirects:     c.MaxRedirects,
-		},
+func (c *Config) Validate() error {
+	if c.Provider == "" {
+		return fmt.Errorf("provider is required")
 	}
+	if c.APIKey == "" {
+		return fmt.Errorf("API key is required")
+	}
+	if c.Timeout <= 0 {
+		return fmt.Errorf("timeout must be positive")
+	}
+	if c.MaxLength <= 0 {
+		return fmt.Errorf("max length must be positive")
+	}
+	if c.Temperature < 0 || c.Temperature > 2 {
+		return fmt.Errorf("temperature must be between 0 and 2")
+	}
+	return nil
 }
 
 // Reset overwrites the config file with default values
@@ -179,5 +175,6 @@ func userHomeDir() string {
 	if err != nil {
 		panic("cannot determine user home directory: " + err.Error())
 	}
+
 	return home
 }

@@ -168,9 +168,7 @@ func (a *App) ConfigAction(c *cli.Context) error {
 
 	a.updateConfigFromFlags(&newCfg, c)
 
-	aiCfg := newCfg.ToAIConfig()
-
-	if err := aiCfg.Validate(); err != nil {
+	if err := newCfg.Validate(); err != nil {
 		return fmt.Errorf("invalid configuration: %w", err)
 	}
 
