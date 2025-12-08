@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/bytedance/sonic"
+	"github.com/dll-as/gitc/internal/ai"
 )
 
 // Config holds the main configuration structure for the gitc CLI tool
@@ -143,6 +145,27 @@ func Save(cfg *Config) error {
 	}
 
 	return nil
+}
+
+func (c Config) ToAIConfig() ai.Config {
+	return ai.Config{
+		Provider:   c.Provider,
+		APIKey:     c.APIKey,
+		URL:        c.URL,
+		Timeout:    time.Duration(c.Timeout) * time.Second,
+		Proxy:      c.Proxy,
+		UseGitmoji: c.UseGitmoji,
+		Message: ai.MessageOptions{
+			Model:            c.Model,
+			Language:         c.Language,
+			CommitType:       c.CommitType,
+			Scope:            "",
+			CustomConvention: c.CustomConvention,
+			MaxLength:        c.MaxLength,
+			Temperature:      c.Temperature,
+			MaxRedirects:     c.MaxRedirects,
+		},
+	}
 }
 
 // Reset overwrites the config file with default values

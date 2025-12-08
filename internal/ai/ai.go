@@ -2,6 +2,7 @@ package ai
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -32,4 +33,25 @@ type Config struct {
 	UseGitmoji bool
 
 	Message MessageOptions
+}
+
+// validateConfig performs basic validation of the AI configuration.
+// Returns an error if required fields are missing or invalid.
+func (c *Config) Validate() error {
+	if c.Provider == "" {
+		return fmt.Errorf("provider is required")
+	}
+	if c.APIKey == "" {
+		return fmt.Errorf("API key is required")
+	}
+	if c.Timeout <= 0 {
+		return fmt.Errorf("timeout must be positive")
+	}
+	if c.Message.MaxLength <= 0 {
+		return fmt.Errorf("max length must be positive")
+	}
+	if c.Message.Temperature < 0 || c.Message.Temperature > 2 {
+		return fmt.Errorf("temperature must be between 0 and 2")
+	}
+	return nil
 }

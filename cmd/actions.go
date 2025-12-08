@@ -18,14 +18,14 @@ import (
 // It provides methods for AI configuration, commit message generation, and Git operations.
 type App struct {
 	gitService git.GitService
-	config     *config.Config
+	config     config.Config
 }
 
 // NewApp creates a new App instance
-func NewApp(gitService git.GitService, config *config.Config) *App {
+func NewApp(gitService git.GitService, cfg *config.Config) *App {
 	return &App{
 		gitService: gitService,
-		config:     config,
+		config:     *cfg,
 	}
 }
 
@@ -56,7 +56,7 @@ func (a *App) ConfigureAI(c *cli.Context) (*ai.Config, error) {
 	a.applyConfigDefaults(cfg)
 
 	// Validate the configuration
-	if err := a.validateConfig(a.config); err != nil {
+	if err := cfg.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid AI configuration: %w", err)
 	}
 
@@ -164,19 +164,23 @@ func (a *App) CommitAction(c *cli.Context) error {
 
 // ConfigAction handles updating and saving application configuration.
 func (a *App) ConfigAction(c *cli.Context) error {
-	cfg := *a.config
-	a.updateConfigFromFlags(&cfg, c)
+	newCfg := a.config
 
-	if err := a.validateConfig(&cfg); err != nil {
+	a.updateConfigFromFlags(&newCfg, c)
+
+	aiCfg := newCfg.ToAIConfig()
+
+	if err := aiCfg.Validate(); err != nil {
 		return fmt.Errorf("invalid configuration: %w", err)
 	}
 
-	if err := config.Save(&cfg); err != nil {
+	if err := config.Save(&newCfg); err != nil {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 
-	a.config = &cfg
-	fmt.Println("✅ Configuration updated successfully")
+	a.config = newCfg
+
+	fmt.Println("Configuration updated successfully")
 	return nil
 }
 
@@ -232,24 +236,6 @@ func (a *App) applyConfigDefaults(cfg *ai.Config) {
 // initAIProvider initializes the appropriate AI provider based on configuration.
 func (a *App) initAIProvider(cfg *ai.Config) (ai.AIProvider, error) {
 	return generic.NewGenericProvider(cfg.APIKey, cfg.Proxy, cfg.URL, cfg.Provider)
-}
-
-// validateConfig performs basic validation of the AI configuration.
-// Returns an error if required fields are missing or invalid.
-func (a *App) validateConfig(cfg *config.Config) error {
-	if cfg.Provider == "" {
-		return fmt.Errorf("AI provider is required")
-	}
-	if cfg.APIKey == "" {
-		return fmt.Errorf("API key is required")
-	}
-	if cfg.Timeout <= 0 {
-		return fmt.Errorf("timeout must be positive")
-	}
-	if cfg.MaxLength <= 0 {
-		return fmt.Errorf("max length must be positive")
-	}
-	return nil
 }
 
 // updateConfigFromFlags updates the configuration with values from CLI flags.
