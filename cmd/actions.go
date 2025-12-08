@@ -33,20 +33,23 @@ func NewApp(gitService git.GitService, config *config.Config) *App {
 // It merges CLI flags with default values and performs validation.
 func (a *App) ConfigureAI(c *cli.Context) (*ai.Config, error) {
 	cfg := &ai.Config{
-		Provider:         c.String("provider"),
-		Model:            c.String("model"),
-		APIKey:           c.String("api-key"),
-		Timeout:          time.Duration(c.Int("timeout")) * time.Second,
-		MaxLength:        c.Int("max-length"),
-		Temperature:      c.Float64("temperature"),
-		Language:         c.String("lang"),
-		MaxRedirects:     c.Int("max-redirects"),
-		Proxy:            c.String("proxy"),
-		CommitType:       c.String("commit-type"),
-		Scope:            c.String("scope"),
-		CustomConvention: c.String("custom-convention"),
-		UseGitmoji:       !c.Bool("no-emoji") && c.Bool("emoji"),
-		URL:              c.String("url"),
+		Provider:   c.String("provider"),
+		APIKey:     c.String("api-key"),
+		Timeout:    time.Duration(c.Int("timeout")) * time.Second,
+		Proxy:      c.String("proxy"),
+		UseGitmoji: !c.Bool("no-emoji") && c.Bool("emoji"),
+		URL:        c.String("url"),
+
+		Message: ai.MessageOptions{
+			Model:            c.String("model"),
+			Language:         c.String("lang"),
+			CommitType:       c.String("commit-type"),
+			Scope:            c.String("scope"),
+			CustomConvention: c.String("custom-convention"),
+			MaxLength:        c.Int("max-length"),
+			Temperature:      c.Float64("temperature"),
+			MaxRedirects:     c.Int("max-redirects"),
+		},
 	}
 
 	// Apply default values for unset fields
@@ -71,18 +74,7 @@ func (a *App) generateCommitMessage(ctx context.Context, diff string, cfg *ai.Co
 	ctx, cancel := context.WithTimeout(ctx, cfg.Timeout)
 	defer cancel()
 
-	opts := ai.MessageOptions{
-		Model:            cfg.Model,
-		Language:         cfg.Language,
-		CommitType:       cfg.CommitType,
-		Scope:            cfg.Scope,
-		CustomConvention: cfg.CustomConvention,
-		MaxLength:        cfg.MaxLength,
-		Temperature:      cfg.Temperature,
-		MaxRedirects:     cfg.MaxRedirects,
-	}
-
-	msg, err := provider.GenerateCommitMessage(ctx, diff, opts)
+	msg, err := provider.GenerateCommitMessage(ctx, diff, cfg.Message)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate commit message: %w", err)
 	}
@@ -193,16 +185,16 @@ func (a *App) applyConfigDefaults(cfg *ai.Config) {
 	if cfg.Provider == "" {
 		cfg.Provider = a.config.Provider
 	}
-	if cfg.Model == "" {
+	if cfg.Message.Model == "" {
 		switch cfg.Provider {
 		case "openai":
-			cfg.Model = "gpt-4o-mini"
+			cfg.Message.Model = "gpt-4o-mini"
 		case "grok":
-			cfg.Model = "grok-3"
+			cfg.Message.Model = "grok-3"
 		case "deepseek":
-			cfg.Model = "deepseek-rag"
+			cfg.Message.Model = "deepseek-rag"
 		default:
-			cfg.Model = a.config.Model
+			cfg.Message.Model = a.config.Model
 		}
 	}
 	if cfg.APIKey == "" {
@@ -211,17 +203,17 @@ func (a *App) applyConfigDefaults(cfg *ai.Config) {
 	if cfg.Timeout == 0 {
 		cfg.Timeout = time.Duration(a.config.Timeout) * time.Second
 	}
-	if cfg.MaxLength == 0 {
-		cfg.MaxLength = a.config.MaxLength
+	if cfg.Message.MaxLength == 0 {
+		cfg.Message.MaxLength = a.config.MaxLength
 	}
-	if cfg.Language == "" {
-		cfg.Language = a.config.Language
+	if cfg.Message.Language == "" {
+		cfg.Message.Language = a.config.Language
 	}
-	if cfg.MaxRedirects == 0 {
-		cfg.MaxRedirects = a.config.MaxRedirects
+	if cfg.Message.MaxRedirects == 0 {
+		cfg.Message.MaxRedirects = a.config.MaxRedirects
 	}
-	if cfg.Temperature == 0 {
-		cfg.Temperature = a.config.Temperature
+	if cfg.Message.Temperature == 0 {
+		cfg.Message.Temperature = a.config.Temperature
 	}
 	if cfg.URL == "" {
 		switch cfg.Provider {

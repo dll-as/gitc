@@ -87,7 +87,7 @@ type Message struct {
 // GenerateCommitMessage generates a commit message using the API
 func (p *GenericProvider) GenerateCommitMessage(ctx context.Context, diff string, opts ai.MessageOptions) (string, error) {
 	// Adjust prompt based on provider if needed
-	prompt := utils.GetPromptForSingleCommit(diff, opts.CommitType, opts.CustomConvention, opts.Language, opts.Scope)
+	prompt := utils.GetPromptForSingleCommit(diff, opts)
 
 	reqBody := Request{
 		Model: opts.Model,

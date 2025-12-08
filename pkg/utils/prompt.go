@@ -3,12 +3,15 @@ package utils
 import (
 	"fmt"
 	"strings"
+
+	"github.com/dll-as/gitc/internal/ai"
 )
 
-func GetPromptForSingleCommit(diff, commitType, customMessageConvention, language, scope string) string {
-	language = strings.ToLower(strings.TrimSpace(language))
-	if language == "" {
-		language = "en"
+// commitType, customMessageConvention, language, scope string
+func GetPromptForSingleCommit(diff string, opts ai.MessageOptions) string {
+	opts.Language = strings.ToLower(strings.TrimSpace(opts.Language))
+	if opts.Language == "" {
+		opts.Language = "en"
 	}
 
 	return fmt.Sprintf(`Write a concise Git commit message in %s based on this diff:
@@ -35,10 +38,10 @@ func GetPromptForSingleCommit(diff, commitType, customMessageConvention, languag
 	fix: prevent crash on nil DB config
 
 	Add nil check before DB usage.`,
-		language,
+		opts.Language,
 		diff,
-		getTypeInstruction(commitType, scope),
-		getConventionInstruction(customMessageConvention))
+		getTypeInstruction(opts.CommitType, opts.Scope),
+		getConventionInstruction(opts.CustomConvention))
 }
 
 func getTypeInstruction(commitType, scope string) string {
