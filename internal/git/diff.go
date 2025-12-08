@@ -13,6 +13,7 @@ import (
 type GitService interface {
 	GetDiff(ctx context.Context) (string, error)
 	StageAll(ctx context.Context) error
+	StageFiles(ctx context.Context, files []string) error
 }
 
 // gitServiceImpl implements GitService
@@ -153,6 +154,20 @@ func (s *gitServiceImpl) StageAll(ctx context.Context) error {
 	cmd := exec.CommandContext(ctx, "git", "add", ".")
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("git add . failed: %s", string(output))
+	}
+
+	return nil
+}
+
+// StageFiles stages specific files (equivalent to 'git add file1 file2 ...')
+func (s *gitServiceImpl) StageFiles(ctx context.Context, files []string) error {
+	if len(files) == 0 {
+		return nil
+	}
+
+	cmd := exec.CommandContext(ctx, "git", append([]string{"add"}, files...)...)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("git add failed: %s", string(output))
 	}
 
 	return nil

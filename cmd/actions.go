@@ -120,6 +120,15 @@ func formatGitCommand(msg string) string {
 
 // CommitAction handles the generation of commit messages
 func (a *App) CommitAction(c *cli.Context) error {
+	if c.NArg() > 0 {
+		files := c.Args().Slice()
+		if err := a.gitService.StageFiles(c.Context, files); err != nil {
+			return fmt.Errorf("failed to stage files: %w", err)
+		}
+
+		fmt.Printf("Staged %d file(s): %s\n", len(files), strings.Join(files, ", "))
+	}
+
 	// Stage all changes if --all (-a) flag is set
 	if c.Bool("all") {
 		if err := a.gitService.StageAll(c.Context); err != nil {

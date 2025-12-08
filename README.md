@@ -82,6 +82,10 @@ git add . # or gitc -a
 # 2. Generate perfect commit message
 gitc
 
+# Stage specific files and generate
+gitc bot.py
+gitc src/utils.go main.go
+
 # Pro Tip: Add emojis and specify language
 gitc --emoji --lang fa
 
