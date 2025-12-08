@@ -1,0 +1,25 @@
+name: Release
+on:
+  push:
+    tags: [ "v*" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: linux   arch: amd64
+          - os: linux   arch: arm64
+          - os: darwin  arch: amd64
+          - os: darwin  arch: arm64
+          - os: windows arch: amd64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: wangyoucao577/go-release-action@v1
+        with:
+          goos: ${{ matrix.os }}
+          goarch: ${{ matrix.arch }}
+          project_path: "."
+          binary_name: "gitc"
+          extra_files: LICENSE README.md

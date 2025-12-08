@@ -9,6 +9,7 @@ go.work.sum
 
 /build
 gitc
+build.sh
 
 # config file
 config.json
