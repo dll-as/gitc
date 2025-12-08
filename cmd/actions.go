@@ -127,10 +127,7 @@ func (a *App) CommitAction(c *cli.Context) error {
 		}
 
 		fmt.Printf("Staged %d file(s): %s\n", len(files), strings.Join(files, ", "))
-	}
-
-	// Stage all changes if --all (-a) flag is set
-	if c.Bool("all") {
+	} else if c.Bool("all") { // Stage all changes if --all (-a) flag is set
 		if err := a.gitService.StageAll(c.Context); err != nil {
 			return fmt.Errorf("❌ failed to stage changes: %v", err)
 		}
@@ -263,7 +260,7 @@ func (a *App) updateConfigFromFlags(cfg *config.Config, c *cli.Context) {
 	if timeout := c.Int("timeout"); timeout != 0 {
 		cfg.Timeout = timeout
 	}
-	if maxLength := c.Int("maxLength"); maxLength != 0 {
+	if maxLength := c.Int("max-length"); maxLength != 0 {
 		cfg.MaxLength = maxLength
 	}
 	if proxy := c.String("proxy"); proxy != "" {

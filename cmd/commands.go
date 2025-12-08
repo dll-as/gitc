@@ -46,7 +46,7 @@ var Commands = &cli.App{
 			Usage: "Set request timeout in seconds",
 		},
 		&cli.IntFlag{
-			Name:  "maxLength",
+			Name:  "max-length",
 			Value: 200,
 			Usage: "Set maximum output length of AI response",
 		},
@@ -163,7 +163,7 @@ var Commands = &cli.App{
 					Usage: "Set request timeout in seconds",
 				},
 				&cli.IntFlag{
-					Name:  "maxLength",
+					Name:  "max-length",
 					Usage: "Set maximum output length of AI response",
 				},
 				&cli.IntFlag{

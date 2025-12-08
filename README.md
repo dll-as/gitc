@@ -142,7 +142,7 @@ The following CLI flags are available for the `ai-commit` command and its `confi
 | `--model` | - | OpenAI model for commit message generation | `gpt-4o-mini` | - | `--model gpt-4o` |
 | `--lang` | - | Language for commit messages (e.g., `en`, `fa`, `ru`) | `en` | `GITC_LANGUAGE` | `--lang fa` |
 | `--timeout` | - | Request timeout in seconds | `10` | - | `--timeout 15` |
-| `--maxLength` | - | Maximum length of the commit message | `200` | - | `--maxLength 150` |
+| `--max-length` | - | Maximum length of the commit message | `200` | - | `--max-length 150` |
 | `--temperature` | - | Control AI creativity (0.0 = fully deterministic, 1.0 = very creative) | `0.7` | - | `--temperature 0.8`
 | `--api-key` | `-k` | API key for the AI provider | - | `AI_API_KEY` | `--api-key sk-xxx` |
 | `--proxy` | `-p` | Proxy URL for API requests | - | `GITC_PROXY` | `--proxy http://proxy.example.com:8080` |
