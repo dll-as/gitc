@@ -11,7 +11,7 @@ import (
 // Used exclusively in --dry-run mode to help debugging prompt engineering and cost estimation.
 // No network request is made.
 func PrintDryRun(diff string, cfg *ai.Config) {
-	prompt := GetPromptForSingleCommit(diff, cfg.CommitType, cfg.CustomConvention, cfg.Language)
+	prompt := GetPromptForSingleCommit(diff, cfg.CommitType, cfg.CustomConvention, cfg.Language, cfg.Scope)
 
 	fmt.Println("Prompt sent to model:")
 	fmt.Println(strings.Repeat("─", 70))

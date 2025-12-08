@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func GetPromptForSingleCommit(diff, commitType, customMessageConvention, language string) string {
+func GetPromptForSingleCommit(diff, commitType, customMessageConvention, language, scope string) string {
 	language = strings.ToLower(strings.TrimSpace(language))
 	if language == "" {
 		language = "en"
@@ -37,15 +37,24 @@ func GetPromptForSingleCommit(diff, commitType, customMessageConvention, languag
 	Add nil check before DB usage.`,
 		language,
 		diff,
-		getTypeInstruction(commitType),
+		getTypeInstruction(commitType, scope),
 		getConventionInstruction(customMessageConvention))
 }
 
-func getTypeInstruction(commitType string) string {
-	if commitType != "" {
-		return fmt.Sprintf("Use type '%s'", commitType)
+func getTypeInstruction(commitType, scope string) string {
+	switch {
+	case commitType != "" && scope != "":
+		return fmt.Sprintf("Use exactly: %s(%s): <summary>", commitType, scope)
+
+	case commitType != "":
+		return fmt.Sprintf("Use exactly: %s: <summary>", commitType)
+
+	case scope != "":
+		return fmt.Sprintf("Choose type but MUST use scope: (%s)", scope)
+
+	default:
+		return "Use Conventional Commits format"
 	}
-	return "Choose appropriate type (feat, fix, docs, style, refactor, test, chore, build, ci, revert, init, security)"
 }
 
 func getConventionInstruction(convention string) string {

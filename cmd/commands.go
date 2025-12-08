@@ -74,6 +74,11 @@ var Commands = &cli.App{
 			Usage:   "Custom commit message convention in JSON format (e.g., '{\"prefix\": \"JIRA-123\"}')",
 			EnvVars: []string{"GITC_CUSTOM_CONVENTION"},
 		},
+		&cli.StringFlag{
+			Name:    "scope",
+			Aliases: []string{"s"},
+			Usage:   "Add scope to commit type (e.g., feat(auth): ...)",
+		},
 		&cli.BoolFlag{
 			Name:    "emoji",
 			Aliases: []string{"g"},
