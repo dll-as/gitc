@@ -143,6 +143,7 @@ The following CLI flags are available for the `ai-commit` command and its `confi
 | `--api-key` | `-k` | API key for the AI provider | - | `AI_API_KEY` | `--api-key sk-xxx` |
 | `--proxy` | `-p` | Proxy URL for API requests | - | `GITC_PROXY` | `--proxy http://proxy.example.com:8080` |
 | `--commit-type` | `-t` | Commit type for Conventional Commits (e.g., `feat`, `fix`) | - | `GITC_COMMIT_TYPE` | `--commit-type feat` |
+| `--scope`      | `-s` | Add scope to the commit type (e.g. `auth`, `ui`, `db`) — works with or without `--commit-type` | - | - | `--scope auth` or `-s ui` |
 | `--custom-convention` | `-C` | Custom commit message convention (JSON format) | - | `GITC_CUSTOM_CONVENTION` | `--custom-convention '{"prefix": "JIRA-123"}'` |
 | `--emoji` | `-g` | Add Gitmoji to the commit message | `false` | `GITC_GITMOJI` | `--emoji` |
 | `--no-emoji` | - | Disables Gitmoji in commit messages (overrides `--emoji` and config file) | `false` | - | `--no-emoji`
