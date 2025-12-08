@@ -165,7 +165,7 @@ func (s *gitServiceImpl) StageFiles(ctx context.Context, files []string) error {
 		return nil
 	}
 
-	cmd := exec.CommandContext(ctx, "git", append([]string{"add"}, files...)...)
+	cmd := exec.CommandContext(ctx, "git", append([]string{"add", "--"}, files...)...)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("git add failed: %s", string(output))
 	}

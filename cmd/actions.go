@@ -87,37 +87,6 @@ func (a *App) generateCommitMessage(ctx context.Context, diff string, cfg *ai.Co
 	return msg, nil
 }
 
-// formatGitCommand formats the git commit command for display based on message content.
-// Handles both single-line and multi-line commit messages.
-func formatGitCommand(msg string) string {
-	lines := strings.Split(msg, "\n")
-	nonEmptyLines := make([]string, 0, len(lines))
-
-	// Filter out empty lines
-	for _, line := range lines {
-		if trimmed := strings.TrimSpace(line); trimmed != "" {
-			nonEmptyLines = append(nonEmptyLines, trimmed)
-		}
-	}
-
-	if len(nonEmptyLines) == 0 {
-		return "git commit -m \"\""
-	}
-
-	if len(nonEmptyLines) == 1 {
-		return fmt.Sprintf("git commit -m \"%s\"", nonEmptyLines[0])
-	}
-
-	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("git commit -m \"%s\"", nonEmptyLines[0]))
-
-	for _, line := range nonEmptyLines[1:] {
-		builder.WriteString(fmt.Sprintf(" \\\n    -m \"%s\"", line))
-	}
-
-	return builder.String()
-}
-
 // CommitAction handles the generation of commit messages
 func (a *App) CommitAction(c *cli.Context) error {
 	if c.NArg() > 0 {
@@ -163,7 +132,7 @@ func (a *App) CommitAction(c *cli.Context) error {
 
 	// Display the generated command
 	fmt.Println("✅ Commit message generated. You can now run:")
-	fmt.Printf("   %s\n", formatGitCommand(msg))
+	fmt.Printf("   %s\n", utils.FormatGitCommand(msg))
 
 	return nil
 }
@@ -268,6 +237,9 @@ func (a *App) updateConfigFromFlags(cfg *config.Config, c *cli.Context) {
 	}
 	if commitType := c.String("commit-type"); commitType != "" {
 		cfg.CommitType = commitType
+	}
+	if temperature := c.Float64("temperature"); temperature != 0 {
+		cfg.Temperature = temperature
 	}
 	if customConvention := c.String("custom-convention"); customConvention != "" {
 		cfg.CustomConvention = customConvention
