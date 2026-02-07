@@ -1,7 +1,3 @@
-<div align="center">
-  <img src="https://github.com/dll-as/gitc/blob/master/assets/logo.jpg" alt="gitc AI-Powered Commits" style="clip-path: inset(35px 0 35px 0);margin: 0; padding: 0px, border-radius: 5px;box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
-</div>
-
 # ✨ gitc - AI-Powered Git Commit Messages
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/dll-as/gitc)](https://pkg.go.dev/github.com/dll-as/gitc)
@@ -28,9 +24,13 @@
 `gitc` is a lightweight CLI tool that leverages AI to craft clear, standards-compliant Git commit messages from your diffs. Supporting [Conventional Commits](https://www.conventionalcommits.org), [Gitmoji](https://gitmoji.dev), and custom rules, it saves time and boosts commit quality for you and your team.
 
 - 🧠 **AI-Powered Commits**
-  - Generates context-aware commit messages using OpenAI, Grok (xAI), or DeepSeek.
+  - Generates context-aware commit messages using OpenAI, Grok (xAI), DeepSeek, or Ollama (local).
   - Supports multiple languages (e.g., English, Persian, Russian) for global teams.
-  - Extensible for future AI providers like Gemini.
+  - Extensible for future AI providers.
+
+- 🏠 **Local AI Support**
+  - Run Ollama locally for private, offline commit generation - no API key required!
+  - Connect to any Ollama instance via custom URLs.
 
 - 📝 **Standards & Customization**
   - Follows [Conventional Commits](https://www.conventionalcommits.org) (`feat`, `fix`, `docs`, etc.) for semantic versioning.
@@ -44,10 +44,12 @@
 - ⚙️ **Flexible Configuration**
   - Supports CLI flags, environment variables, and `~/.gitc/config.json`.
   - Includes proxy support, adjustable timeouts, and redirect limits.
+  - No API key required for local Ollama provider.
 
 - ⚡️ **Performance & Reliability**
   - Fast JSON parsing with [sonic](https://github.com/bytedance/sonic) and HTTP requests with [fasthttp](https://github.com/valyala/fasthttp).
   - Robust error handling for reliable operation.
+  - Unified interface supporting both cloud and local AI providers.
 
 - 🧪 Debug & Dry-Run
   - Preview prompts and configs without API calls — perfect for tuning without burning tokens.
@@ -56,7 +58,8 @@
 ### Prerequisites:
   - Go: Version **1.18** or higher (required for building from source).
   - Git: Required for retrieving staged changes.
-  - OpenAI API Key: Required for AI-powered commit message generation. Set it via the `AI_API_KEY` environment variable or in the config file.
+  - API Key: Required for cloud AI providers (OpenAI, Grok, DeepSeek).
+  - Ollama: Optional for local AI (install from [ollama.ai](https://ollama.ai))
 
 #### Quick Install:
   ```bash
@@ -86,6 +89,9 @@ gitc
 gitc bot.py
 gitc src/utils.go main.go
 
+# Use local Ollama for private commits
+gitc --provider ollama
+
 # Pro Tip: Add emojis and specify language
 gitc --emoji --lang fa
 
@@ -98,9 +104,10 @@ gitc --dry-run
 
 ## Environment Variables
 ```bash
-export OPENAI_API_KEY="sk-your-key-here"
+export AI_API_KEY="sk-your-key-here"  # For cloud providers
 export GITC_LANGUAGE="fa"
 export GITC_MODEL="gpt-4"
+export GITC_PROVIDER="ollama"  # Use local Ollama by default
 ```
 
 # ⚙️ Configuration
@@ -114,19 +121,15 @@ Config File (`~/.gitc/config.json`) :
   "language": "en",
   "timeout": 10,
   "commit_type": "",
-  "custom-convention": "",
+  "custom_convention": "",
   "use_gitmoji": false,
-  "max_redirects": 5,
-  "open_ai": {
-    "api_key": "sk-your-key-here",
-    "model": "gpt-4o-mini",
-    "url": "https://api.openai.com/v1/chat/completions"
-  }
+  "max_redirects": 5
 }
 ```
 
 ### Update Configuration
 ```bash
+gitc config --provider ollama --model llama3.2
 gitc config --api-key "sk-your-key-here" --model "gpt-4o-mini" --lang en
 ```
 
@@ -137,14 +140,14 @@ The following CLI flags are available for the `ai-commit` command and its `confi
 | Flag | Alias | Description | Default | Environment Variable | Example |
 |------|-------|-------------|---------|----------------------|---------|
 | `--all` | `-a` | Stage all changes before generating commit message (equivalent to `git add .`) | `false` | `GITC_STAGE_ALL` | `-all` or `-a`
-| `--provider` | - | AI provider to use (e.g., `openai`, `anthropic`) | `openai` | `AI_PROVIDER` | `--provider openai` |
-| `--url` | `-u` | Custom API URL for the AI provider | Provider-specific | `GITC_API_URL` | `--url https://api.x.ai/v1/chat/completions`
-| `--model` | - | OpenAI model for commit message generation | `gpt-4o-mini` | - | `--model gpt-4o` |
+| `--provider` | - | AI provider to use (e.g., `openai`, `grok`, `deepseek`, `ollama`) | `openai` | `AI_PROVIDER` | `--provider ollama` |
+| `--url` | `-u` | Custom API URL for the AI provider | Provider-specific | `GITC_API_URL` | `--url http://localhost:11434/api/chat`
+| `--model` | - | AI model for commit message generation | Provider-specific | `GITC_MODEL` | `--model llama3.2` |
 | `--lang` | - | Language for commit messages (e.g., `en`, `fa`, `ru`) | `en` | `GITC_LANGUAGE` | `--lang fa` |
 | `--timeout` | - | Request timeout in seconds | `10` | - | `--timeout 15` |
 | `--max-length` | - | Maximum length of the commit message | `200` | - | `--max-length 150` |
 | `--temperature` | - | Control AI creativity (0.0 = fully deterministic, 1.0 = very creative) | `0.7` | - | `--temperature 0.8`
-| `--api-key` | `-k` | API key for the AI provider | - | `AI_API_KEY` | `--api-key sk-xxx` |
+| `--api-key` | `-k` | API key for the AI provider (not required for Ollama) | - | `AI_API_KEY` | `--api-key sk-xxx` |
 | `--proxy` | `-p` | Proxy URL for API requests | - | `GITC_PROXY` | `--proxy http://proxy.example.com:8080` |
 | `--commit-type` | `-t` | Commit type for Conventional Commits (e.g., `feat`, `fix`) | - | `GITC_COMMIT_TYPE` | `--commit-type feat` |
 | `--scope`      | `-s` | Add scope to the commit type (e.g. `auth`, `ui`, `db`) — works with or without `--commit-type` | - | - | `--scope auth` or `-s ui` |
@@ -156,26 +159,33 @@ The following CLI flags are available for the `ai-commit` command and its `confi
 | `--config` | `-c` | Path to the configuration file | `~/.gitc/config.json` | `GITC_CONFIG_PATH` | `--config ./my-config.json` |
 
 > [!NOTE]
+> - **Ollama Note**: No API key required when using `--provider ollama`
+> - **Default URLs**:
+>   - OpenAI: `https://api.openai.com/v1/chat/completions`
+>   - Grok: `https://api.x.ai/v1/chat/completions`
+>   - DeepSeek: `https://api.deepseek.com/v1/chat/completions`
+>   - Ollama: `http://localhost:11434/api/chat`
+> - **Default Models**:
+>   - OpenAI: `gpt-4o-mini`
+>   - Ollama: `llama3.2`
 > - Flags for the `config` subcommand are similar but exclude defaults, as they override the config file.
 > - **Flags** > **Environment Variables** > **Config File** — This is the order of precedence when multiple settings are provided.
 > - The `--custom-convention` flag expects a JSON string with a `prefix` field (e.g., `{"prefix": "JIRA-123"}`).
-> - The `--version` flag displays the current tool version (e.g., `0.3.0`) and can be used to verify installation.
+> - The `--version` flag displays the current tool version (e.g., `0.5.0`) and can be used to verify installation.
 > - The `--all` flag (alias `-a`) stages all changes in the working directory before generating the commit message, streamlining the workflow. For example, `gitc -a --emoji` stages all changes and generates a commit message with Gitmoji.
 > - Environment variables take precedence over config file settings but are overridden by CLI flags.
-> - You can reset all configuration values to their defaults by using gitc config `gitc reset-config`.
-
+> - You can reset all configuration values to their defaults by using `gitc reset-config`.
 
 ## 🤖 AI Providers
-`gitc` is designed to be AI-provider agnostic. While it currently supports OpenAI out of the box, support for additional providers is on the roadmap to ensure flexibility and future-proofing.
+`gitc` supports both cloud-based and local AI providers, giving you flexibility and privacy options.
 
-| Provider | Supported Models | Required Configuration | Status |
-| --- | --- | --- | --- |
-| **OpenAI** | `gpt-4o`, `gpt-4o-mini`, `gpt-3.5-turbo` | `api_key`, `model`, `url` (optional) | ✅ Supported (default) |
-| **Grok (xAI)** | grok-3 (experimental) | `api_key`, `model`, `url` | 🧪 Experimental Support |
-| **DeepSeek** | deepseek-rag (experimental) | `api_key`, `model`, `url` | 🧪 Experimental Support |
-| **Gemini (Google)** | Coming Soon | - | 🔜 Planned |
-| **Others** | - | - | 🧪 Under consideration |
-> ℹ️ We're actively working on supporting multiple AI backends to give you more control, flexibility, and performance. Have a provider you'd like to see? [Open a discussion](https://github.com/dll-as/gitc/discussions)!
+| Provider | Supported Models | Required Configuration | API Key | Status |
+| --- | --- | --- | --- | --- |
+| **OpenAI** | `gpt-4o`, `gpt-4o-mini`, `gpt-3.5-turbo` | `model`, `url` (optional) | ✅ Required | ✅ Stable |
+| **Grok (xAI)** | `grok-3`, `grok-2` | `model`, `url` | ✅ Required | 🧪 Experimental |
+| **DeepSeek** | `deepseek-rag`, `deepseek-coder` | `model`, `url` | ✅ Required | 🧪 Experimental |
+| **Ollama (Local)** | Any Ollama model (`llama3.2`, `codellama`, `mistral`, etc.) | `model`, `url` (optional) | ❌ Not Required | ✅ Stable |
+> **Local AI Benefits**: Ollama provides complete privacy, works offline, and has no API costs. Perfect for sensitive projects or when internet access is limited.
 
 ## 🤝 Contributing
 
