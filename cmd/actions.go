@@ -170,6 +170,8 @@ func (a *App) applyConfigDefaults(cfg *ai.Config) {
 			cfg.Message.Model = "grok-3"
 		case "deepseek":
 			cfg.Message.Model = "deepseek-rag"
+		case "ollama":
+			cfg.Message.Model = "llama3.2"
 		default:
 			cfg.Message.Model = a.config.Model
 		}
@@ -200,6 +202,8 @@ func (a *App) applyConfigDefaults(cfg *ai.Config) {
 			cfg.URL = "https://api.x.ai/v1/chat/completions"
 		case "deepseek":
 			cfg.URL = "https://api.deepseek.com/v1/chat/completions"
+		case "ollama":
+			cfg.URL = "http://localhost:11434/api/generate"
 		default:
 			cfg.URL = a.config.URL
 		}

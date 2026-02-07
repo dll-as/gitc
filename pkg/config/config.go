@@ -71,7 +71,7 @@ func Load() (*Config, error) {
 	}
 
 	var cfg Config
-	if err := sonic.Unmarshal(data, &cfg); err != nil {
+	if err = sonic.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
@@ -80,9 +80,12 @@ func Load() (*Config, error) {
 	if cfg.Provider == "" {
 		cfg.Provider = defaults.Provider
 	}
-	if cfg.APIKey == "" {
+
+	// Ollama doesn't require API key, skip validation for it
+	if cfg.Provider != "ollama" && cfg.APIKey == "" {
 		cfg.APIKey = defaults.APIKey
 	}
+
 	if cfg.Model == "" {
 		switch cfg.Provider {
 		case "openai":
@@ -91,6 +94,8 @@ func Load() (*Config, error) {
 			cfg.Model = "grok-3"
 		case "deepseek":
 			cfg.Model = "deepseek-rag"
+		case "ollama":
+			cfg.Model = "llama3.2"
 		default:
 			cfg.Model = defaults.Model
 		}
@@ -103,6 +108,8 @@ func Load() (*Config, error) {
 			cfg.URL = "https://api.x.ai/v1/chat/completions"
 		case "deepseek":
 			cfg.URL = "https://api.deepseek.com/v1/chat/completions"
+		case "ollama":
+			cfg.URL = "http://localhost:11434/api/generate"
 		default:
 			cfg.URL = defaults.URL
 		}
@@ -149,8 +156,8 @@ func (c *Config) Validate() error {
 	if c.Provider == "" {
 		return fmt.Errorf("provider is required")
 	}
-	if c.APIKey == "" {
-		return fmt.Errorf("API key is required")
+	if c.Provider != "ollama" && c.APIKey == "" {
+		return fmt.Errorf("API key is required for %s provider", c.Provider)
 	}
 	if c.Timeout <= 0 {
 		return fmt.Errorf("timeout must be positive")
