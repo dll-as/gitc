@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.5.0] - 2026-02-07
+### Added
+- **Local AI support** — Added `ollama` provider for offline, private commit generation
+  Run `gitc --provider ollama` to use local models, no API key required!
+- Custom Ollama URL support — Connect to any Ollama instance via `--url` flag
+  e.g., `gitc --provider ollama --url "http://localhost:11434//api/generate"`
+
+### Changed
+- Enhanced provider architecture — Unified interface now supports both cloud and local AI
+- Improved API compatibility layer — Handles OpenAI-style and Ollama-style APIs seamlessly
+- Updated model defaults — Ollama uses `llama3.2` as default local model
+
+### Fixed
+- API key validation now optional for Ollama provider
+- Better error messages for local AI connection issues
+- Configuration validation adjusted for different provider requirements
+
+---
+
 ## [0.4.0] - 2025-12-08
 ### Added
 - **`gitc file1 file2 ...`** — Auto-stage files and generate commit message instantly
