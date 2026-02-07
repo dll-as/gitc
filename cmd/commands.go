@@ -9,7 +9,7 @@ import (
 )
 
 // Version defines the current version of the gitc tool.
-const Version = "0.4.0"
+const Version = "0.5.0"
 
 var appInstance *App
 
@@ -27,27 +27,22 @@ var Commands = &cli.App{
 		},
 		&cli.StringFlag{
 			Name:  "provider",
-			Value: "openai",
-			Usage: "AI provider to use (openai, anthropic)",
+			Usage: "AI provider to use (openai, grok, deepseek, ollama)",
 		},
 		&cli.StringFlag{
 			Name:  "model",
-			Value: "gpt-4o-mini",
 			Usage: "Specify the OpenAI model",
 		},
 		&cli.StringFlag{
 			Name:  "lang",
-			Value: "en",
 			Usage: "Set commit message language (en, fa, ru, etc.)",
 		},
 		&cli.IntFlag{
 			Name:  "timeout",
-			Value: 10,
 			Usage: "Set request timeout in seconds",
 		},
 		&cli.IntFlag{
 			Name:  "max-length",
-			Value: 200,
 			Usage: "Set maximum output length of AI response",
 		},
 		&cli.StringFlag{
@@ -92,13 +87,11 @@ var Commands = &cli.App{
 		&cli.IntFlag{
 			Name:    "max-redirects",
 			Aliases: []string{"r"},
-			Value:   5,
 			Usage:   "Maximum number of HTTP redirects to follow",
 			EnvVars: []string{"GITC_MAX_REDIRECTS"},
 		},
 		&cli.Float64Flag{
 			Name:  "temperature",
-			Value: 0.7,
 			Usage: "Control creativity (0.0 = deterministic, 1.0 = very creative)",
 		},
 		&cli.BoolFlag{
