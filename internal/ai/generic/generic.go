@@ -18,6 +18,7 @@ const (
 	defaultOpenAIURL   = "https://api.openai.com/v1/chat/completions"
 	defaultGrokURL     = "https://api.x.ai/v1/chat/completions"
 	defaultDeepSeekURL = "https://api.deepseek.com/v1/chat/completions"
+	defaultOllamaURL   = "http://localhost:11434//api/generate"
 	systemPrompt       = "You are an AI assistant that generates concise and meaningful Git commit messages."
 )
 
@@ -31,9 +32,10 @@ type GenericProvider struct {
 
 // NewGenericProvider creates a new provider for OpenAI-compatible APIs
 func NewGenericProvider(apiKey, proxy, url, provider string) (*GenericProvider, error) {
-	if apiKey == "" {
+	if apiKey == "" && provider != "ollama" {
 		return nil, errors.New("API key is required")
 	}
+
 	if url == "" {
 		switch provider {
 		case "openai":
@@ -42,6 +44,8 @@ func NewGenericProvider(apiKey, proxy, url, provider string) (*GenericProvider, 
 			url = defaultGrokURL
 		case "deepseek":
 			url = defaultDeepSeekURL
+		case "ollama":
+			url = defaultOllamaURL
 		default:
 			return nil, fmt.Errorf("no default URL for provider: %s", provider)
 		}
@@ -63,25 +67,43 @@ func NewGenericProvider(apiKey, proxy, url, provider string) (*GenericProvider, 
 	}, nil
 }
 
-type Request struct {
-	Model       string    `json:"model"`
-	Messages    []Message `json:"messages"`
-	MaxTokens   int       `json:"max_tokens,omitempty"`
-	Temperature float64   `json:"temperature,omitempty"`
+// Request structures for different providers
+type OpenAIRequest struct {
+	Model       string          `json:"model"`
+	Messages    []OpenAIMessage `json:"messages"`
+	MaxTokens   int             `json:"max_tokens,omitempty"`
+	Temperature float64         `json:"temperature,omitempty"`
+	Stream      bool            `json:"stream,omitempty"`
 }
 
-type Response struct {
+type OllamaRequest struct {
+	Model  string `json:"model"`
+	Prompt string `json:"prompt"`
+	Stream bool   `json:"stream"`
+	// Options struct {
+	// 	Temperature float64 `json:"temperature,omitempty"`
+	// 	NumPredict  int     `json:"num_predict,omitempty"`
+	// } `json:"options,omitempty"`
+}
+
+type OpenAIMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type OpenAIResponse struct {
 	Choices []struct {
-		Message Message `json:"message"`
+		Message OpenAIMessage `json:"message"`
 	} `json:"choices"`
 	Error struct {
 		Message string `json:"message"`
-	} `json:"error,omitempty"`
+	} `json:"error"`
 }
 
-type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+type OllamaResponse struct {
+	Model    string `json:"model"`
+	Response string `json:"response"`
+	Error    string `json:"error,omitempty"`
 }
 
 // GenerateCommitMessage generates a commit message using the API
@@ -89,18 +111,29 @@ func (p *GenericProvider) GenerateCommitMessage(ctx context.Context, diff string
 	// Adjust prompt based on provider if needed
 	prompt := utils.GetPromptForSingleCommit(diff, opts)
 
-	reqBody := Request{
-		Model: opts.Model,
-		// Store: false,
-		Messages: []Message{
-			{"system", systemPrompt},
-			{"user", prompt},
-		},
-		MaxTokens:   max(512, opts.MaxLength), // More tokens for complete messages
-		Temperature: opts.Temperature,         // Slightly creative but controlled
-	}
+	var reqBody []byte
+	var err error
 
-	jsonData, err := sonic.Marshal(reqBody)
+	if p.provider == "ollama" {
+		ollamaReq := OllamaRequest{
+			Model:  opts.Model,
+			Prompt: prompt,
+			Stream: false,
+		}
+		reqBody, err = sonic.Marshal(ollamaReq)
+	} else {
+		openaiReq := OpenAIRequest{
+			Model: opts.Model,
+			Messages: []OpenAIMessage{
+				{"system", systemPrompt},
+				{"user", prompt},
+			},
+			MaxTokens:   max(512, opts.MaxLength), // More tokens for complete messages
+			Temperature: opts.Temperature,         // Slightly creative but controlled
+			Stream:      false,
+		}
+		reqBody, err = sonic.Marshal(openaiReq)
+	}
 	if err != nil {
 		return "", fmt.Errorf("failed to encode JSON: %v", err)
 	}
@@ -110,9 +143,14 @@ func (p *GenericProvider) GenerateCommitMessage(ctx context.Context, diff string
 
 	req.SetRequestURI(p.url)
 	req.Header.SetMethod("POST")
-	req.Header.Set("Authorization", "Bearer "+p.apiKey)
+
+	// Only set Authorization header for providers that need it
+	if p.provider != "ollama" && p.apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+p.apiKey)
+	}
+
 	req.Header.Set("Content-Type", "application/json")
-	req.SetBody(jsonData)
+	req.SetBody(reqBody)
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
@@ -121,26 +159,32 @@ func (p *GenericProvider) GenerateCommitMessage(ctx context.Context, diff string
 		return "", fmt.Errorf("API request failed: %w", err)
 	}
 
-	var res Response
-	if err = sonic.Unmarshal(resp.Body(), &res); err != nil {
-		return "", fmt.Errorf("failed to parse response: %v", err)
-	}
-
-	if statusCode := resp.StatusCode(); statusCode != fasthttp.StatusOK {
-		if res.Error.Message != "" {
-			return "", fmt.Errorf("API error [%d] from %s: %s", statusCode, p.provider, res.Error.Message)
+	var commitMessage string
+	if p.provider == "ollama" {
+		var ollamaRes OllamaResponse
+		if err = sonic.Unmarshal(resp.Body(), &ollamaRes); err != nil {
+			return "", fmt.Errorf("failed to parse Ollama response: %v", err)
 		}
 
-		return "", fmt.Errorf("API returned status %d from %s: %s", statusCode, p.provider, resp.Body())
-	}
+		if ollamaRes.Error != "" {
+			return "", fmt.Errorf("Ollama API error: %s", ollamaRes.Error)
+		}
 
-	if res.Error.Message != "" {
-		return "", fmt.Errorf("API error from %s: %s", p.provider, res.Error.Message)
-	} else if len(res.Choices) == 0 {
-		return "", fmt.Errorf("no response from %s", p.provider)
-	}
+		commitMessage = strings.TrimSpace(ollamaRes.Response)
+	} else {
+		var openaiRes OpenAIResponse
+		if err = sonic.Unmarshal(resp.Body(), &openaiRes); err != nil {
+			return "", fmt.Errorf("failed to parse response: %v", err)
+		}
 
-	commitMessage := strings.TrimSpace(res.Choices[0].Message.Content)
+		if openaiRes.Error.Message != "" {
+			return "", fmt.Errorf("API error from %s: %s", p.provider, openaiRes.Error.Message)
+		} else if len(openaiRes.Choices) == 0 {
+			return "", fmt.Errorf("no response from %s", p.provider)
+		}
+
+		commitMessage = strings.TrimSpace(openaiRes.Choices[0].Message.Content)
+	}
 	if commitMessage == "" {
 		return "", fmt.Errorf("empty commit message generated by %s", p.provider)
 	}

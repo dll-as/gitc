@@ -41,7 +41,7 @@ func (c *Config) Validate() error {
 	if c.Provider == "" {
 		return fmt.Errorf("provider is required")
 	}
-	if c.APIKey == "" {
+	if c.Provider != "ollama" && c.APIKey == "" {
 		return fmt.Errorf("API key is required")
 	}
 	if c.Timeout <= 0 {
