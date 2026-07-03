@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.0.0] - 2026-07-04
+
+### Added
+- **OpenAI-compatible backend** supporting OpenAI, OpenRouter, and other compatible providers.
+- Configurable `--base-url` for connecting to any OpenAI-compatible API.
+- Unified backend abstraction for cloud and local AI providers.
+- Persistent configuration via `gitc config`.
+- Automatic configuration loading from CLI flags, environment variables, and config file.
+- Zero-dependency binary distribution.
+
+### Changed
+- **Major configuration redesign** with a cleaner and more extensible structure.
+- Renamed `provider` → `backend`.
+- Renamed `--url` → `--base-url`.
+- Replaced `max-length` with `max-tokens`.
+- Simplified backend implementation using a unified provider interface.
+- Improved configuration validation and precedence (`CLI > Environment > Config`).
+- Updated README and documentation for the new configuration system.
+
+### Removed
+- Removed `custom-convention`.
+- Removed `max-redirects`.
+- Removed provider-specific configuration in favor of a unified backend model.
+
+### Fixed
+- Fixed CLI configuration persistence.
+- Fixed API key handling when using the `config` command.
+- Fixed configuration merging between CLI flags and saved config.
+- Improved HTTP client reliability and request handling.
+- Various bug fixes and internal refactoring for improved stability.
+
 ## [0.5.0] - 2026-02-07
 ### Added
 - **Local AI support** — Added `ollama` provider for offline, private commit generation
