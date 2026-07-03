@@ -3,15 +3,14 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/dll-as/gitc/internal/git"
-	"github.com/dll-as/gitc/pkg/config"
+	"github.com/dll-as/gitc/internal/config"
 	"github.com/urfave/cli/v2"
 )
 
 // Version defines the current version of the gitc tool.
 const Version = "0.5.0"
 
-var appInstance *App
+var app *App
 
 // Commands defines the CLI application configuration.
 var Commands = &cli.App{
@@ -19,113 +18,160 @@ var Commands = &cli.App{
 	Usage:   "Generate AI-powered commit messages",
 	Version: Version,
 	Flags: []cli.Flag{
+		// Git
 		&cli.BoolFlag{
 			Name:    "all",
 			Aliases: []string{"a"},
-			Usage:   "Stage all changes before generating commit message (equivalent to 'git add .')",
+			Usage:   "Stage all changes before generating commit message",
 			EnvVars: []string{"GITC_STAGE_ALL"},
 		},
+
+		// Backend
 		&cli.StringFlag{
-			Name:  "provider",
-			Usage: "AI provider to use (openai, grok, deepseek, ollama)",
+			Name:    "backend",
+			Usage:   "AI backend (openai-compatible, ollama, anthropic)",
+			EnvVars: []string{"GITC_BACKEND"},
 		},
 		&cli.StringFlag{
-			Name:  "model",
-			Usage: "Specify the OpenAI model",
-		},
-		&cli.StringFlag{
-			Name:  "lang",
-			Usage: "Set commit message language (en, fa, ru, etc.)",
-		},
-		&cli.IntFlag{
-			Name:  "timeout",
-			Usage: "Set request timeout in seconds",
-		},
-		&cli.IntFlag{
-			Name:  "max-length",
-			Usage: "Set maximum output length of AI response",
+			Name:    "base-url",
+			Usage:   "Backend API URL",
+			EnvVars: []string{"GITC_BASE_URL"},
 		},
 		&cli.StringFlag{
 			Name:    "api-key",
 			Aliases: []string{"k"},
-			Usage:   "API key for the AI provider",
+			Usage:   "API key",
 			EnvVars: []string{"AI_API_KEY"},
 		},
+
+		&cli.StringFlag{
+			Name:    "model",
+			Usage:   "Model name",
+			EnvVars: []string{"GITC_MODEL"},
+		},
+
+		&cli.IntFlag{
+			Name:    "timeout",
+			Usage:   "HTTP timeout (seconds)",
+			EnvVars: []string{"GITC_TIMEOUT"},
+		},
+
+		&cli.IntFlag{
+			Name:    "max-retries",
+			Usage:   "Maximum retry attempts",
+			EnvVars: []string{"GITC_MAX_RETRIES"},
+		},
+
 		&cli.StringFlag{
 			Name:    "proxy",
-			Aliases: []string{"p"},
-			Usage:   "Proxy URL for API requests (e.g., http://proxy.example.com:8080)",
+			Usage:   "HTTP proxy",
 			EnvVars: []string{"GITC_PROXY"},
 		},
+
+		// Prompt
+		&cli.StringFlag{
+			Name:    "lang",
+			Usage:   "Commit language",
+			EnvVars: []string{"GITC_LANGUAGE"},
+		},
+
+		&cli.StringFlag{
+			Name:    "convention",
+			Usage:   "Commit convention",
+			EnvVars: []string{"GITC_CONVENTION"},
+		},
+
 		&cli.StringFlag{
 			Name:    "commit-type",
 			Aliases: []string{"t"},
-			Usage:   "Commit type for Conventional Commits (e.g., feat, fix, docs)",
+			Usage:   "Commit type",
 			EnvVars: []string{"GITC_COMMIT_TYPE"},
 		},
-		&cli.StringFlag{
-			Name:    "custom-convention",
-			Aliases: []string{"C"},
-			Usage:   "Custom commit message convention in JSON format (e.g., '{\"prefix\": \"JIRA-123\"}')",
-			EnvVars: []string{"GITC_CUSTOM_CONVENTION"},
-		},
+
 		&cli.StringFlag{
 			Name:    "scope",
 			Aliases: []string{"s"},
-			Usage:   "Add scope to commit type (e.g., feat(auth): ...)",
+			Usage:   "Commit scope",
+			EnvVars: []string{"GITC_SCOPE"},
 		},
+
 		&cli.BoolFlag{
 			Name:    "emoji",
 			Aliases: []string{"g"},
-			Usage:   "Add Gitmoji to the commit message based on commit type",
+			Usage:   "Enable Gitmoji",
 			EnvVars: []string{"GITC_GITMOJI"},
 		},
+
 		&cli.BoolFlag{
 			Name:  "no-emoji",
-			Usage: "Disable Gitmoji in the commit message (overrides --emoji)",
+			Usage: "Disable Gitmoji",
 		},
+
 		&cli.IntFlag{
-			Name:    "max-redirects",
-			Aliases: []string{"r"},
-			Usage:   "Maximum number of HTTP redirects to follow",
-			EnvVars: []string{"GITC_MAX_REDIRECTS"},
+			Name:    "max-tokens",
+			Usage:   "Maximum output tokens",
+			EnvVars: []string{"GITC_MAX_TOKENS"},
 		},
+
 		&cli.Float64Flag{
-			Name:  "temperature",
-			Usage: "Control creativity (0.0 = deterministic, 1.0 = very creative)",
+			Name:    "temperature",
+			Usage:   "Sampling temperature",
+			EnvVars: []string{"GITC_TEMPERATURE"},
 		},
+
+		&cli.Float64Flag{
+			Name:    "top-p",
+			Usage:   "Top-p sampling",
+			EnvVars: []string{"GITC_TOP_P"},
+		},
+
+		// Git
+		&cli.IntFlag{
+			Name:    "max-diff-size",
+			Usage:   "Maximum git diff size",
+			EnvVars: []string{"GITC_MAX_DIFF_SIZE"},
+		},
+
+		// Misc
 		&cli.BoolFlag{
 			Name:    "dry-run",
 			Aliases: []string{"d"},
-			Usage:   "Show the processed diff and prompt without sending to AI",
+			Usage:   "Print prompt without calling AI",
 			EnvVars: []string{"GITC_DRY_RUN"},
 		},
+
 		&cli.StringFlag{
 			Name:    "config",
 			Aliases: []string{"c"},
-			Usage:   "Path to config file",
+			Usage:   "Config file path",
 			EnvVars: []string{"GITC_CONFIG_PATH"},
 		},
 	},
 	Before: func(c *cli.Context) error {
-		// Set config path if provided via flag or environment variable
-		if configPath := c.String("config"); configPath != "" {
-			config.SetConfigPath(configPath)
+		if c.Args().First() == "config" || c.Args().First() == "reset-config" {
+			return nil
 		}
 
-		// Load config
 		cfg, err := config.Load()
 		if err != nil {
-			return fmt.Errorf("failed to load config: %w", err)
+			return err
 		}
 
-		// Initialize dependencies
-		gitService := git.NewGitService()
-		appInstance = NewApp(gitService, cfg)
+		cfg.ApplyCLI(c)
+
+		if err := cfg.Validate(); err != nil {
+			return err
+		}
+
+		app, err = NewApp(cfg)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	},
 	Action: func(c *cli.Context) error {
-		return appInstance.CommitAction(c)
+		return app.CommitAction(c)
 	},
 	Commands: []*cli.Command{
 		{
@@ -134,9 +180,14 @@ var Commands = &cli.App{
 			Usage:   "Configure AI provider settings",
 			Flags: []cli.Flag{
 				&cli.StringFlag{
-					Name:    "provider",
-					Aliases: []string{"ai"},
-					Usage:   "AI provider to use (openai, anthropic)",
+					Name:    "backend",
+					Usage:   "AI backend (openai-compatible, ollama, anthropic)",
+					EnvVars: []string{"GITC_BACKEND"},
+				},
+				&cli.StringFlag{
+					Name:    "base-url",
+					Usage:   "Backend API URL",
+					EnvVars: []string{"GITC_BASE_URL"},
 				},
 				&cli.StringFlag{
 					Name:  "model",
@@ -196,20 +247,16 @@ var Commands = &cli.App{
 				},
 			},
 			Action: func(c *cli.Context) error {
-				// Set config path if provided
-				if configPath := c.String("config"); configPath != "" {
-					config.SetConfigPath(configPath)
-				}
-
-				// Load config
 				cfg, err := config.Load()
 				if err != nil {
-					return fmt.Errorf("failed to load config: %w", err)
+					return err
 				}
 
-				// Initialize dependencies
-				gitService := git.NewGitService()
-				app := NewApp(gitService, cfg)
+				app, err = NewApp(cfg)
+				if err != nil {
+					return err
+				}
+
 				return app.ConfigAction(c)
 			},
 		}, {

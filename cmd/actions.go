@@ -1,103 +1,53 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/dll-as/gitc/internal/ai"
-	"github.com/dll-as/gitc/internal/ai/generic"
+	"github.com/dll-as/gitc/internal/ai/backend"
+	"github.com/dll-as/gitc/internal/config"
+	"github.com/dll-as/gitc/internal/core"
 	"github.com/dll-as/gitc/internal/git"
-	"github.com/dll-as/gitc/pkg/config"
-	"github.com/dll-as/gitc/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
 
-// App encapsulates the core application logic and dependencies for gitc.
-// It provides methods for AI configuration, commit message generation, and Git operations.
 type App struct {
-	gitService git.GitService
-	config     config.Config
+	git     git.Service
+	config  *config.Config
+	service *core.CommitGenerator
+	AI      backend.Provider
 }
 
-// NewApp creates a new App instance
-func NewApp(gitService git.GitService, cfg *config.Config) *App {
+func NewApp(cfg *config.Config) (*App, error) {
+	gitSvc := git.NewService(cfg.Git.ExcludePatterns)
+
+	provider, err := ai.New(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	gen := core.NewCommitGenerator(provider, cfg)
+
 	return &App{
-		gitService: gitService,
-		config:     *cfg,
-	}
-}
-
-// ConfigureAI builds and validates the AI configuration from CLI context.
-// It merges CLI flags with default values and performs validation.
-func (a *App) ConfigureAI(c *cli.Context) (*ai.Config, error) {
-	cfg := &ai.Config{
-		Provider:   c.String("provider"),
-		APIKey:     c.String("api-key"),
-		Timeout:    time.Duration(c.Int("timeout")) * time.Second,
-		Proxy:      c.String("proxy"),
-		UseGitmoji: !c.Bool("no-emoji") && c.Bool("emoji"),
-		URL:        c.String("url"),
-
-		Message: ai.MessageOptions{
-			Model:            c.String("model"),
-			Language:         c.String("lang"),
-			CommitType:       c.String("commit-type"),
-			Scope:            c.String("scope"),
-			CustomConvention: c.String("custom-convention"),
-			MaxLength:        c.Int("max-length"),
-			Temperature:      c.Float64("temperature"),
-			MaxRedirects:     c.Int("max-redirects"),
-		},
-	}
-
-	// Apply default values for unset fields
-	a.applyConfigDefaults(cfg)
-
-	// Validate the configuration
-	if err := cfg.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid AI configuration: %w", err)
-	}
-
-	return cfg, nil
-}
-
-// generateCommitMessage creates a commit message using AI based on the provided git diff.
-// It handles AI provider initialization, timeout management, and Gitmoji formatting.
-func (a *App) generateCommitMessage(ctx context.Context, diff string, cfg *ai.Config) (string, error) {
-	provider, err := a.initAIProvider(cfg)
-	if err != nil {
-		return "", fmt.Errorf("failed to initialize AI provider: %w", err)
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, cfg.Timeout)
-	defer cancel()
-
-	msg, err := provider.GenerateCommitMessage(ctx, diff, cfg.Message)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate commit message: %w", err)
-	}
-
-	// Apply Gitmoji if enabled
-	if cfg.UseGitmoji {
-		msg = utils.AddGitmojiToCommitMessage(msg)
-	}
-
-	return msg, nil
+		config:  cfg,
+		git:     gitSvc,
+		AI:      provider,
+		service: gen,
+	}, nil
 }
 
 // CommitAction handles the generation of commit messages
 func (a *App) CommitAction(c *cli.Context) error {
 	if c.NArg() > 0 {
 		files := c.Args().Slice()
-		if err := a.gitService.StageFiles(c.Context, files); err != nil {
+		if err := a.git.StageFiles(c.Context, files); err != nil {
 			return fmt.Errorf("failed to stage files: %w", err)
 		}
 
 		fmt.Printf("Staged %d file(s): %s\n", len(files), strings.Join(files, ", "))
 	} else if c.Bool("all") { // Stage all changes if --all (-a) flag is set
-		if err := a.gitService.StageAll(c.Context); err != nil {
+		if err := a.git.StageAll(c.Context); err != nil {
 			return fmt.Errorf("❌ failed to stage changes: %v", err)
 		}
 
@@ -105,158 +55,50 @@ func (a *App) CommitAction(c *cli.Context) error {
 	}
 
 	// Fetch git diff for staged changes
-	diff, err := a.gitService.GetDiff(c.Context)
+	diff, err := a.git.GetDiff(c.Context)
 	if err != nil {
 		return fmt.Errorf("❌ failed to get git diff: %v", err)
 	} else if diff == "" {
 		return fmt.Errorf("❌ nothing staged for commit")
 	}
 
-	// Configure AI settings
-	cfg, err := a.ConfigureAI(c)
-	if err != nil {
-		return fmt.Errorf("❌ failed to build AI config: %w", err)
-	}
-
-	// preview prompt + config, no API call
 	if c.Bool("dry-run") {
-		utils.PrintDryRun(diff, cfg)
+		// utils.PrintDryRun(diff, cfg)
 		return nil
 	}
 
 	// Generate commit message
-	msg, err := a.generateCommitMessage(c.Context, diff, cfg)
+	msg, err := a.service.Generate(c.Context, diff)
 	if err != nil {
 		return fmt.Errorf("❌ failed to generate commit message: %w", err)
 	}
 
 	// Display the generated command
 	fmt.Println("✅ Commit message generated. You can now run:")
-	fmt.Printf("   %s\n", utils.FormatGitCommand(msg))
+	fmt.Printf("   %s\n", a.service.FormatGitCommand(msg))
 
 	return nil
 }
 
-// ConfigAction handles updating and saving application configuration.
 func (a *App) ConfigAction(c *cli.Context) error {
-	newCfg := a.config
+	// Merge CLI flags into current config
+	a.config.ApplyCLI(c)
 
-	a.updateConfigFromFlags(&newCfg, c)
-
-	if err := newCfg.Validate(); err != nil {
-		return fmt.Errorf("invalid configuration: %w", err)
+	// Validate final config
+	if err := a.config.Validate(); err != nil {
+		return fmt.Errorf("validate config: %w", err)
 	}
 
-	if err := config.Save(&newCfg); err != nil {
-		return fmt.Errorf("failed to save config: %w", err)
+	// Save config
+	if err := config.Save(a.config); err != nil {
+		return fmt.Errorf("save config: %w", err)
 	}
 
-	a.config = newCfg
-
-	fmt.Println("Configuration updated successfully")
+	fmt.Println("✓ Configuration saved successfully")
 	return nil
 }
 
-// applyConfigDefaults sets sensible default values for unset AI configuration fields.
-func (a *App) applyConfigDefaults(cfg *ai.Config) {
-	if cfg.Provider == "" {
-		cfg.Provider = a.config.Provider
-	}
-	if cfg.Message.Model == "" {
-		switch cfg.Provider {
-		case "openai":
-			cfg.Message.Model = "gpt-4o-mini"
-		case "grok":
-			cfg.Message.Model = "grok-3"
-		case "deepseek":
-			cfg.Message.Model = "deepseek-rag"
-		case "ollama":
-			cfg.Message.Model = "llama3.2"
-		default:
-			cfg.Message.Model = a.config.Model
-		}
-	}
-	if cfg.APIKey == "" {
-		cfg.APIKey = a.config.APIKey
-	}
-	if cfg.Timeout == 0 {
-		cfg.Timeout = time.Duration(a.config.Timeout) * time.Second
-	}
-	if cfg.Message.MaxLength == 0 {
-		cfg.Message.MaxLength = a.config.MaxLength
-	}
-	if cfg.Message.Language == "" {
-		cfg.Message.Language = a.config.Language
-	}
-	if cfg.Message.MaxRedirects == 0 {
-		cfg.Message.MaxRedirects = a.config.MaxRedirects
-	}
-	if cfg.Message.Temperature == 0 {
-		cfg.Message.Temperature = a.config.Temperature
-	}
-	if cfg.URL == "" {
-		switch cfg.Provider {
-		case "openai":
-			cfg.URL = "https://api.openai.com/v1/chat/completions"
-		case "grok":
-			cfg.URL = "https://api.x.ai/v1/chat/completions"
-		case "deepseek":
-			cfg.URL = "https://api.deepseek.com/v1/chat/completions"
-		case "ollama":
-			cfg.URL = "http://localhost:11434/api/generate"
-		default:
-			cfg.URL = a.config.URL
-		}
-	}
-}
+func (a *App) ResetAction(c *cli.Context) error {
 
-// initAIProvider initializes the appropriate AI provider based on configuration.
-func (a *App) initAIProvider(cfg *ai.Config) (ai.AIProvider, error) {
-	return generic.NewGenericProvider(cfg.APIKey, cfg.Proxy, cfg.URL, cfg.Provider)
-}
-
-// updateConfigFromFlags updates the configuration with values from CLI flags.
-// Only updates fields that are explicitly set in the context.
-func (a *App) updateConfigFromFlags(cfg *config.Config, c *cli.Context) {
-	if provider := c.String("provider"); provider != "" {
-		cfg.Provider = provider
-	}
-	if model := c.String("model"); model != "" {
-		cfg.Model = model
-	}
-	if apiKey := c.String("api-key"); apiKey != "" {
-		cfg.APIKey = apiKey
-	}
-	if lang := c.String("lang"); lang != "" {
-		cfg.Language = lang
-	}
-	if timeout := c.Int("timeout"); timeout != 0 {
-		cfg.Timeout = timeout
-	}
-	if maxLength := c.Int("max-length"); maxLength != 0 {
-		cfg.MaxLength = maxLength
-	}
-	if proxy := c.String("proxy"); proxy != "" {
-		cfg.Proxy = proxy
-	}
-	if commitType := c.String("commit-type"); commitType != "" {
-		cfg.CommitType = commitType
-	}
-	if temperature := c.Float64("temperature"); temperature != 0 {
-		cfg.Temperature = temperature
-	}
-	if customConvention := c.String("custom-convention"); customConvention != "" {
-		cfg.CustomConvention = customConvention
-	}
-	if c.IsSet("no-emoji") {
-		cfg.UseGitmoji = !c.Bool("no-emoji")
-	} else if c.IsSet("emoji") {
-		cfg.UseGitmoji = c.Bool("emoji")
-	}
-	if maxRedirects := c.Int("max-redirects"); maxRedirects != 0 {
-		cfg.MaxRedirects = maxRedirects
-	}
-	if url := c.String("url"); url != "" {
-		cfg.URL = url
-	}
+	return nil
 }
