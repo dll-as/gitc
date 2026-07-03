@@ -25,11 +25,14 @@ func (g *CommitGenerator) buildPrompt(diff string) string {
 
 	b.WriteString(`
 Format:
-<type>(<scope>): <subject>    ← max 50 chars, imperative mood
-                              ← blank line
-<body>                        ← what/why, max 72 chars per line
+	Line 1: <type>: <summary> (≤50 chars)
+	Line 2: (blank)
+	Line 3+: (optional) details (≤100 chars per line)
 
 Rules: raw text only, no markdown, no explanation.
+Examples:
+	feat: add JWT middleware\nAdd access token check to protected routes.
+	fix: prevent crash on nil DB config\nAdd nil check before DB usage.
 `)
 
 	b.WriteString("\nDiff:\n")
@@ -45,6 +48,7 @@ func (g *CommitGenerator) FormatGitCommand(msg string) string {
 		return `git commit -m ""`
 	}
 
+	msg = strings.ReplaceAll(msg, "\\n", "\n")
 	lines := strings.Split(msg, "\n")
 
 	// Drop trailing blank lines
