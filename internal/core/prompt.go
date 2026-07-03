@@ -61,13 +61,13 @@ func (g *CommitGenerator) FormatGitCommand(msg string) string {
 	}
 
 	if len(lines) == 1 {
-		return fmt.Sprintf("git commit -m %q", lines[0])
+		return fmt.Sprintf("git commit -m %q", strings.TrimSpace(lines[0]))
 	}
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("git commit -m %q", lines[0]))
+	b.WriteString(fmt.Sprintf("git commit -m %q", strings.TrimSpace(lines[0])))
 	for _, line := range lines[1:] {
-		b.WriteString(fmt.Sprintf(" \\\n    -m %q", line))
+		b.WriteString(fmt.Sprintf(" \\\n    -m %q", strings.TrimSpace(line)))
 	}
 	return b.String()
 }
