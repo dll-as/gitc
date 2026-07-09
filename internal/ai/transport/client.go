@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"golang.org/x/net/proxy"
 )
 
 type Client struct {
@@ -40,13 +42,6 @@ func New(cfg Config) (*Client, error) {
 	}
 
 	transport := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext,
-
 		ForceAttemptHTTP2:     true,
 		MaxIdleConns:          100,
 		MaxIdleConnsPerHost:   10,
@@ -61,7 +56,31 @@ func New(cfg Config) (*Client, error) {
 			return nil, fmt.Errorf("invalid proxy: %w", err)
 		}
 
-		transport.Proxy = http.ProxyURL(u)
+		switch u.Scheme {
+		case "http", "https":
+			transport.Proxy = http.ProxyURL(u)
+
+		case "socks5", "socks5h":
+			dialer, err := proxy.FromURL(
+				u,
+				&net.Dialer{
+					Timeout:   30 * time.Second,
+					KeepAlive: 30 * time.Second,
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+				return dialer.Dial(network, addr)
+			}
+
+		default:
+			return nil, fmt.Errorf("unsupported proxy scheme: %s", u.Scheme)
+		}
+	} else {
+		transport.Proxy = http.ProxyFromEnvironment
 	}
 
 	return &Client{

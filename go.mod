@@ -2,7 +2,10 @@ module github.com/dll-as/gitc
 
 go 1.25.0
 
-require github.com/urfave/cli/v2 v2.27.7
+require (
+	github.com/urfave/cli/v2 v2.27.7
+	golang.org/x/net v0.57.0
+)
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
