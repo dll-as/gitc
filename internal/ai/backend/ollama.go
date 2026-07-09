@@ -58,7 +58,7 @@ func (p *OllamaProvider) Generate(ctx context.Context, req *GenerateRequest) (*G
 
 	respBody, err := p.client.DoWithContext(ctx, &transport.Request{
 		Method: "POST",
-		URL:    p.config.Backend.BaseURL,
+		URL:    strings.TrimRight(p.config.Backend.BaseURL, "/") + "/chat/completions",
 		Headers: map[string]string{
 			"Content-Type": "application/json",
 		},

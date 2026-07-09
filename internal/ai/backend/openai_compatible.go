@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/dll-as/gitc/internal/ai/transport"
@@ -60,9 +61,7 @@ func (p *OpenAICompatibleProvider) Generate(
 		"stream":      false,
 	}
 
-	for k, v := range p.config.Backend.ExtraBody {
-		payload[k] = v
-	}
+	maps.Copy(payload, p.config.Backend.ExtraBody)
 
 	body, err := json.Marshal(payload)
 	if err != nil {
