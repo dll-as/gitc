@@ -68,6 +68,12 @@ func (p *OllamaProvider) Generate(ctx context.Context, req *GenerateRequest) (*G
 		return nil, err
 	}
 
+	if p.config.Prompt.Debug {
+		fmt.Println("========== Ollama Response ==========")
+		fmt.Println(string(respBody))
+		fmt.Println("=====================================")
+	}
+
 	var resp OllamaResponse
 	if err = json.Unmarshal(respBody, &resp); err != nil {
 		return nil, err

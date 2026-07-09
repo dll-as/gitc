@@ -105,9 +105,10 @@ Config File (`~/.gitc/config.json`) :
     "language": "en",
     "convention": "conventional",
     "use_gitmoji": false,
-    "max_tokens": 512,
+    "max_tokens": 1024,
     "temperature": 0.3,
-    "top_p": 1
+    "top_p": 1,
+    "debug": false
   },
   "git": {
     "max_diff_size": 100000,

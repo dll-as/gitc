@@ -3,6 +3,7 @@ package backend
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"maps"
 	"strings"
@@ -76,9 +77,7 @@ func (p *OpenAICompatibleProvider) Generate(
 		headers["Authorization"] = "Bearer " + p.config.Backend.APIKey
 	}
 
-	for k, v := range p.config.Backend.ExtraHeaders {
-		headers[k] = v
-	}
+	maps.Copy(headers, p.config.Backend.ExtraHeaders)
 
 	respBody, err := p.client.DoWithContext(ctx, &transport.Request{
 		Method:  "POST",
@@ -88,6 +87,12 @@ func (p *OpenAICompatibleProvider) Generate(
 	})
 	if err != nil {
 		return nil, fmt.Errorf("API request failed: %w", err)
+	}
+
+	if p.config.Prompt.Debug {
+		fmt.Println("========== OpenAI Response ==========")
+		fmt.Println(string(respBody))
+		fmt.Println("=====================================")
 	}
 
 	var resp OpenAIResponse
@@ -103,18 +108,23 @@ func (p *OpenAICompatibleProvider) Generate(
 		return nil, fmt.Errorf("provider returned no choices")
 	}
 
-	msg := strings.TrimSpace(resp.Choices[0].Message.Content)
-	if msg == "" {
-		return nil, fmt.Errorf("provider returned empty message")
-	}
+	choice := resp.Choices[0]
+	switch {
+	case choice.Message.Content != "":
+		return &GenerateResponse{
+			Message: choice.Message.Content,
+			Model:   resp.Model,
+			Usage: &Usage{
+				PromptTokens:     resp.Usage.PromptTokens,
+				CompletionTokens: resp.Usage.CompletionTokens,
+				TotalTokens:      resp.Usage.TotalTokens,
+			},
+		}, nil
 
-	return &GenerateResponse{
-		Message: msg,
-		Model:   resp.Model,
-		Usage: &Usage{
-			PromptTokens:     resp.Usage.PromptTokens,
-			CompletionTokens: resp.Usage.CompletionTokens,
-			TotalTokens:      resp.Usage.TotalTokens,
-		},
-	}, nil
+	case choice.FinishReason == "length":
+		return nil, errors.New("model hit max_tokens before producing a final answer")
+
+	default:
+		return nil, errors.New("provider returned no completion")
+	}
 }

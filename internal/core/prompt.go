@@ -8,7 +8,7 @@ import (
 func (g *CommitGenerator) buildPrompt(diff string) string {
 	var b strings.Builder
 
-	b.WriteString("Write a Git commit message for this diff.\n\n")
+	b.WriteString("Generate Git commit message for diff. Format: <type>: <summary> (≤50 chars), blank line, details (≤100 chars/line). Raw text only, no markdown.\n\n")
 	b.WriteString(fmt.Sprintf("Language: %s\n", g.config.Prompt.Language))
 
 	if g.config.Prompt.CommitType != "" {
@@ -23,17 +23,7 @@ func (g *CommitGenerator) buildPrompt(diff string) string {
 		b.WriteString("Prefix the subject with a Gitmoji.\n")
 	}
 
-	b.WriteString(`
-Format:
-	Line 1: <type>: <summary> (≤50 chars)
-	Line 2: (blank)
-	Line 3+: (optional) details (≤100 chars per line)
-
-Rules: raw text only, no markdown, no explanation.
-Examples:
-	feat: add JWT middleware\nAdd access token check to protected routes.
-	fix: prevent crash on nil DB config\nAdd nil check before DB usage.
-`)
+	b.WriteString("Examples:\nfeat: add JWT middleware\nAdd access token check.\nfix: prevent crash\nAdd nil check.\n\n")
 
 	b.WriteString("\nDiff:\n")
 	b.WriteString(diff)

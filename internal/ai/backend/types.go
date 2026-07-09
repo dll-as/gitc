@@ -10,8 +10,10 @@ type OpenAIRequest struct {
 }
 
 type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Role      string `json:"role"`
+	Content   string `json:"content"`
+	Refusal   string `json:"refusal,omitempty"`
+	Reasoning string `json:"reasoning,omitempty"`
 }
 
 type OpenAIResponse struct {

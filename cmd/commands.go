@@ -133,11 +133,17 @@ var Commands = &cli.App{
 		},
 
 		// Misc
+		// &cli.BoolFlag{
+		// 	Name:    "dry-run",
+		// 	Aliases: []string{"d"},
+		// 	Usage:   "Print prompt without calling AI",
+		// 	EnvVars: []string{"GITC_DRY_RUN"},
+		// },
 		&cli.BoolFlag{
-			Name:    "dry-run",
+			Name:    "debug",
 			Aliases: []string{"d"},
-			Usage:   "Print prompt without calling AI",
-			EnvVars: []string{"GITC_DRY_RUN"},
+			Usage:   "Enable debug mode (show raw API responses)",
+			EnvVars: []string{"GITC_DEBUG"},
 		},
 
 		&cli.StringFlag{
@@ -207,6 +213,10 @@ var Commands = &cli.App{
 					Usage: "Set request timeout in seconds",
 				},
 				&cli.IntFlag{
+					Name:  "max-tokens",
+					Usage: "Maximum output tokens",
+				},
+				&cli.IntFlag{
 					Name:  "max-length",
 					Usage: "Set maximum output length of AI response",
 				},
@@ -238,6 +248,10 @@ var Commands = &cli.App{
 				&cli.BoolFlag{
 					Name:  "no-emoji",
 					Usage: "Disable Gitmoji in the commit message",
+				},
+				&cli.BoolFlag{
+					Name:  "debug",
+					Usage: "Enable debug mode",
 				},
 				&cli.StringFlag{
 					Name:    "config",

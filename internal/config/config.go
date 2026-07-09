@@ -50,6 +50,7 @@ type PromptConfig struct {
 	MaxTokens   int     `json:"max_tokens"`
 	Temperature float64 `json:"temperature"`
 	TopP        float64 `json:"top_p"`
+	Debug       bool    `json:"debug"`
 }
 
 type GitConfig struct {
@@ -81,9 +82,10 @@ func DefaultConfig() *Config {
 			CommitType:  "",
 			Scope:       "",
 			UseGitmoji:  false,
-			MaxTokens:   512,
+			MaxTokens:   1024,
 			Temperature: 0.3,
 			TopP:        1.0,
+			Debug:       false,
 		},
 		Git: GitConfig{
 			ExcludePatterns: []string{
@@ -182,6 +184,10 @@ func (cfg *Config) ApplyCLI(c *cli.Context) {
 	if c.IsSet("no-emoji") {
 		cfg.Prompt.UseGitmoji = !c.Bool("no-emoji")
 	}
+
+	if c.IsSet("debug") {
+		cfg.Prompt.Debug = c.Bool("debug")
+	}
 }
 
 // getConfigPath returns the path to the config file
@@ -251,7 +257,7 @@ func (c *Config) Validate() error {
 	}
 
 	if c.Prompt.MaxTokens <= 0 {
-		c.Prompt.MaxTokens = 512
+		c.Prompt.MaxTokens = 1024
 	}
 
 	if c.Prompt.Temperature < 0 ||
